@@ -1,53 +1,101 @@
 /**
  * Created by Gilles on 09.12.2015.
  */
+ /*:
+  * @plugindesc You can lower prices in your shops with a variable which shows the discount
+  * @author Gilles Meyer (admin@gamedev-tutorials.de)
+  *
+  * @param Discount Variable
+  * @desc Variable Number for the discount (The values inside the variable: 0 = no discount, 100 = free shopping, -100 = doubles the price)
+  * @default 10
+  *
+  * @param Multiple Discount
+  * @desc Give Discount on already discounted Goods? (0 = no, 1 = yes)
+  * @default 1
+  *
+  * @param Discount On
+  * @desc Is the discount on? (0 = no, 1 = yes)
+  * @default 1
+  *
+  *
+  *
+  * @help
+  */
+  
 
-$customPrice = null;
-
-DataManager._databaseFiles.push({ name: '$customPrice',  src: 'Actors.json', "path" : "" });
-
-DataManager.loadDatabase = function() {
-    var test = this.isBattleTest() || this.isEventTest();
-    var prefix = test ? 'Test_' : '';
-    for (var i = 0; i < this._databaseFiles.length; i++) {
-      var name = this._databaseFiles[i].name;
-      var src = this._databaseFiles[i].src;
-      var path = this._databaseFiles[i].path;
-      this.loadDataFile(name, prefix + src, path);
-    }
-    if (this.isEventTest()) {
-      this.loadDataFile('$testEvent', prefix + 'Event.json');
-    }
-};
-
-  DataManager.loadDataFile = function(name, src, path) {
-    var xhr = new XMLHttpRequest();
-    var url = (typeof path == "string" ? path : 'data/') + src;
-    xhr.open('GET', url);
-    xhr.overrideMimeType('application/json');
-    xhr.onload = function() {
-      if (xhr.status < 400) {
-        window[name] = JSON.parse(xhr.responseText);
-        DataManager.onLoad(window[name]);
-      }
-    };
-    xhr.onerror = function() {
-      DataManager._errorUrl = DataManager._errorUrl || url;
-    };
-    window[name] = null;
-    xhr.send();
-  };
 
 (function() {
 
-  function editGoods(goods) {
+  var parameters = PluginManager.parameters('CustomPrices');
+  var discountVariable = Number(parameters['Discount Variable'] || 10);
+  var giveDiscount = (parameters['Discount On'] == "0") ? false : true;
+  var multiDiscount = (parameters['Multiple Discount'] == "0") ? false : true;
+  var currentShopOwner = 0;
 
+
+
+  function calculateDiscount(price, discount, alreadyDiscount) {
+     if(!multiDiscount && alreadyDiscount) return price;
+
+     if(discount  < 0) {
+       discount*=-1;
+       return Math.round(price + (price/100 * discount));
+     } else{
+       var newPrice = Math.round(price - (price/100 * discount));
+       return (newPrice < 0) ? 0 : newPrice;
+     }
   }
 
-var _Scene_Shop_create = Scene_Shop.prototype.create;
-Scene_Shop.prototype.create = function() {
-  this._goods
-  _Scene_Shop_create.call(this);
-};
+  //var _Window_ShopBuy_makeItemList = Window_ShopBuy.prototype.makeItemList;
+  Window_ShopBuy.prototype.makeItemList = function() {
+      this._data = [];
+      this._price = [];
+      this._shopGoods.forEach(function(goods) {
+          var item = null;
+          switch (goods[0]) {
+          case 0:
+              item = $dataItems[goods[1]];
+              break;
+          case 1:
+              item = $dataWeapons[goods[1]];
+              break;
+          case 2:
+              item = $dataArmors[goods[1]];
+              break;
+          }
+          if (item) {
+              this._data.push(item);
+
+              var shopVar = (currentShopOwner != 0) ? currentShopOwner : discountVariable;
+              var discount = $gameVariables.value(shopVar);
+              if(giveDiscount && discount != 0) {
+                this._price.push(calculateDiscount((goods[2] === 0 ? item.price : goods[3]), discount, goods[2] === 0));
+              } else {
+                this._price.push(goods[2] === 0 ? item.price : goods[3]);
+              }
+
+          }
+      }, this);
+  };
+
+  // PLUGIN COMMANDS
+
+
+  var _Game_Interpreter_pluginCommand =
+            Game_Interpreter.prototype.pluginCommand;
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
+        _Game_Interpreter_pluginCommand.call(this, command, args);
+        // insert additional processing details here
+        try {
+          if(command == "GDT" && args[0] == "Price") {
+            setShopOwner(args[1]);
+          }
+        } catch(e) {}
+    };
+
+  var setShopOwner = function(varNumber) {
+    currentShopOwner = varNumber;
+  };
+
 
 })();

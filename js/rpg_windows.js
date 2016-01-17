@@ -6004,6 +6004,12 @@ Window_DebugEdit.prototype.updateVariable = function() {
         if (Input.isRepeated('pageup')) {
             value -= 10;
         }
+        if (Input.isRepeated('bigstepdown')) {
+            value -= 100;
+        }
+        if (Input.isRepeated('bigstepup')) {
+            value += 100;
+        }
         if ($gameVariables.value(variableId) !== value) {
             $gameVariables.setValue(variableId, value);
             SoundManager.playCursor();
