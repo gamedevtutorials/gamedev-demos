@@ -6,5 +6,9 @@ var $plugins =
 {"name":"NoteTestReady","status":true,"description":"Test for Notes","parameters":{"Variable Number":"18"}},
 {"name":"DynamicFaces","status":true,"description":"Displays dynamic actor Faces v2","parameters":{"Actors Picture Name":"Actors"}},
 {"name":"AdditionalDebugScene","status":true,"description":"","parameters":{}},
-{"name":"VariableGraphics","status":true,"description":"Change of Faceset, Characters and SV_Battler","parameters":{"ImageNr":"2","ImageID":"1","switchNr":"10"}}
+{"name":"VariableGraphics","status":true,"description":"Change of Faceset, Characters and SV_Battler","parameters":{"ImageNr":"2","ImageID":"1","switchNr":"10"}},
+{"name":"Window_Pet","status":true,"description":"","parameters":{}},
+{"name":"DreamX_FollowerOptions","status":true,"description":"v1.02 Choose which party members appear as followers or in battle.\n\n<DreamX Follower and Battle Member Options>","parameters":{"Max Index":"14","Battle Members Only":"false","Max Followers":"$gameParty.maxBattleMembers() +2"}},
+{"name":"OurScene","status":true,"description":"","parameters":{}},
+{"name":"OurWindow","status":true,"description":"","parameters":{}}
 ];
